@@ -3,11 +3,17 @@ import os
 
 def download_dir(s3_key, local_folder, s3_bucket_name, aws_access_key_id, aws_secret_access_key):
     """
-    params:
-    - s3_key: pattern to match in s3
-    - local_folder: local path to folder in which to place files
-    - s3_bucket_name: s3 bucket with target contents
-    - client: initialized s3 client object
+    Function to download the data from s3 bucket for training
+
+    Args:
+        s3_key(str): pattern to match in s3
+        local_folder(str): local path to folder in which to place files
+        s3_bucket_name(str): s3 bucket with target contents
+        aws_access_key_id(str): AWS access key id stored in .env file
+        aws_secret_access_key(str): AWS secret access key stored in .env file
+
+    Returns:
+        True 
     """
     s3_client = boto3.client('s3',
                              aws_access_key_id=aws_access_key_id,
@@ -41,15 +47,21 @@ def download_dir(s3_key, local_folder, s3_bucket_name, aws_access_key_id, aws_se
         if not os.path.exists(os.path.dirname(dest_pathname)):
             os.makedirs(os.path.dirname(dest_pathname))
         s3_client.download_file(s3_bucket_name, k, dest_pathname)
+
+    return True
         
 def upload_file_s3(s3_bucket_name,local_folder,s3_key,file_name,aws_access_key_id,aws_secret_access_key):
     """ 
     Function to upload a file in s3 bucket
-    Input:s3_bucket_name: s3 bucket name
-          local_folder: path of the file in the local system
-          s3_key: path to the location in s3 bucket
-          file_name: filename to be saved in s3
-    Returns: Object url: s3 url of the file
+
+    Args:
+        s3_bucket_name(str): s3 bucket name to which the model and confusion matrix is to be uploaded
+        local_folder(str): path of the file in the local system
+        s3_key(str): path to the location in s3 bucket
+        file_name(str): filename to be saved in s3
+
+    Returns: 
+        Object url(str): s3 object url of the uploaded file
     """
     print("uploading model to s3")
     s3 = boto3.resource('s3',

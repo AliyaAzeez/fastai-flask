@@ -6,16 +6,11 @@ from torchvision import *
 from fastai.vision import *
 import torch
 import torchvision.transforms as transforms
-import glob
-import numpy as np
-import time 
 from torch.utils.data import DataLoader, Dataset
-import PIL
-import boto3
-from datetime import datetime
-import pytz
-import cv2
-from io import BytesIO
+import matplotlib.pyplot as plt
+import numpy as np
+import itertools
+
 
 def find_appropriate_lr(model:Learner, lr_diff:int = 5, loss_threshold:float = .05, adjust_value:float = 1, plot:bool = False) -> float:
     #Run the Learning Rate Finder
@@ -40,21 +35,21 @@ def find_appropriate_lr(model:Learner, lr_diff:int = 5, loss_threshold:float = .
 
     lr_to_use = local_min_lr * adjust_value
     
-    # if plot:
-    #     ## Default set to False
-    #     # plots the gradients of the losses in respect to the learning rate change
-    #     plt.plot(loss_grad)
-    #     plt.plot(len(losses)+l_idx, loss_grad[l_idx],markersize=10,marker='o',color='red')
-    #     plt.ylabel("Loss")
-    #     plt.xlabel("Index of LRs")
-    #     plt.show()
+    if plot:
+        ## Default set to False
+        # plots the gradients of the losses in respect to the learning rate change
+        plt.plot(loss_grad)
+        plt.plot(len(losses)+l_idx, loss_grad[l_idx],markersize=10,marker='o',color='red')
+        plt.ylabel("Loss")
+        plt.xlabel("Index of LRs")
+        plt.show()
 
-    #     plt.plot(np.log10(lrs), losses)
-    #     plt.ylabel("Loss")
-    #     plt.xlabel("Log 10 Transform of Learning Rate")
-    #     loss_coord = np.interp(np.log10(lr_to_use), np.log10(lrs), losses)
-    #     plt.plot(np.log10(lr_to_use), loss_coord, markersize=10,marker='o',color='red')
-    #     plt.show()
+        plt.plot(np.log10(lrs), losses)
+        plt.ylabel("Loss")
+        plt.xlabel("Log 10 Transform of Learning Rate")
+        loss_coord = np.interp(np.log10(lr_to_use), np.log10(lrs), losses)
+        plt.plot(np.log10(lr_to_use), loss_coord, markersize=10,marker='o',color='red')
+        plt.show()
         
     return lr_to_use
 
