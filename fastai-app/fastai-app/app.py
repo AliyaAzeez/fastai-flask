@@ -4,7 +4,6 @@ from PIL import Image
 from torchvision import *
 from fastai.vision import *
 import torch
-taset
 import PIL
 from datetime import datetime
 import pytz
@@ -21,29 +20,41 @@ def index():
     return render_template('index.html')
 
 
-@app.route('/fastai_train',methods=['GET','POST'])
+@app.route('/fastai-train',methods=['GET','POST'])
 def train_model():
+    """
+    Endpoint to train fastai models and upload the models in AWS S3 bucket
+
+    Datasets can be downloaded from AWS S3 to local folder for training and the option to upload the model to S3 bucket.
+    AWS credentials stored in .env file and accessed using python-dotenv.
+    
+    Arguments in the post request:
+        model_name(str): name of the created model
+        data_path(str): local path to training data
+        export_path(str): local path to save model
+        valid_pct(float): validation percentage
+        size(int): image size
+        bs(int): batch_size
+        to_normalize(bool): Boolean input to normalize or not
+        num_epoch(int): number of epochs
+        to_download_data(bool): Boolean input to download data from aws s3 bucket
+        to_upload_model(bool): Boolean input whether to upload the trained model to s3 or not
+        bucket_name(str): s3 bucket name
+        model_prefix(str): path to the location in s3 bucket to save model
+        cm_prefix(str): path to the location in s3 bucket to save confusion matrix
+        local_data_dir(str): directory path to download the data from s3
+        train_data_s3_key(str): s3 object key to data 
+
+    Returns:
+        if to_upload_model is TRUE, returns
+
+            Model_S3_Url: Model S3 object url 
+            CM_S3_Url: Confusion Matrix S3 object url
+
+        returns Success otherwise.
 
     """
-    Fastai Training and creates model and confusion matrix , upload in s3
-    ## Arguments
-        model_name: name of the created model
-        data_path: local path to training data
-        export_path: local path to save model
-        base_arch: training architecture to use for transfer learning 
-        valid_pct: validation percentage
-        tfms: list of transformations eg: tfms = [[rotate(degrees=(-5,5))],[rotate(degrees=(-5,5))]]
-        size: image size
-        bs: batch_size
-        to_normalize: Boolean input to normalize or not
-        num_epoch: number of epochs
-        to_download_data: Boolean input to download data from aws s3 bucket
-        to_upload_model: Boolean input whether to upload the trained model to s3 or not
-        bucket_name: s3 bucket name
-        model_prefix:path to the location in s3 bucket to save model
-        cm_prefix:path to the location in s3 bucket to save confusion matrix
-        local_data_dir: 
-    """
+
     if request.method == 'POST':
         data = request.get_json()
         model_name = data.get("model_name")
@@ -87,16 +98,17 @@ def train_model():
         learn.fit_one_cycle(4,lr)
         
         
-        dt_now = datetime.now(pytz.timezone("Asia/Kolkata"))
-        today = dt_now.strftime("%Y_%m_%d__%H_%M")
+        dt_now = datetime.now(pytz.timezone("UTC"))
+        now = dt_now.strftime("%Y_%m_%d__%H_%M")
         
-        model_file_name=f'{model_name}_{today}.pkl' 
+        model_file_name=f'{model_name}_{now}.pkl' 
         model_export_path=f'{export_path}{model_file_name}'
         
+        # save the model 
         learn.export(model_export_path)
         
         class_report=ClassificationInterpretation.from_learner(learn)
-        cm_file_name=f'{model_name}_{today}_cm.png'
+        cm_file_name=f'{model_name}_{now}_cm.png'
         cm_export_path=f'{export_path}{cm_file_name}'
         plot_save_confusion_matrix(class_report,cm_path=cm_export_path) # function that plot and save confusion matrix 
 
@@ -105,8 +117,8 @@ def train_model():
             upload_model_obj_url=upload_file_s3(bucket_name,model_export_path,model_prefix,model_file_name,aws_access_key_id,aws_secret_access_key)
             upload_confusion_obj_url=upload_file_s3(bucket_name,cm_export_path,cm_prefix,cm_file_name,aws_access_key_id,aws_secret_access_key)
             return {
-                "Model_S3_Url":upload_model_obj_url,
-                "CM_Url":upload_confusion_obj_url
+                "model_s3_url":upload_model_obj_url,
+                "cm_url":upload_confusion_obj_url
             }
 
         return "Success"
