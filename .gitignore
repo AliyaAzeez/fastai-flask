@@ -1,0 +1,15 @@
+*.png
+*.jpeg
+*.JPEG
+.DS_Store
+.xcf
+*.jpg
+*.h5
+.avi
+*.pth
+*.pkl
+*.pyc
+.pt
+.cfg
+.sh
+.env
